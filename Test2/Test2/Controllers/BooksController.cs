@@ -1,11 +1,7 @@
-﻿
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Test2.Models;
 using Test2.DTOs;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Collections.Generic;
 
 namespace Test2.Controllers
 {
@@ -35,31 +31,20 @@ namespace Test2.Controllers
 
             if (authors.Count != request.AuthorIds.Count)
             {
-                return BadRequest("authors are not found.");
+                return BadRequest("Some authors are not found.");
             }
 
             var genresList = new List<Genre>();
             foreach (var genreInput in request.Genres)
             {
-                Genre genre;
-                if (genreInput.Id.HasValue)
+                Genre genre = await _dbContext.Genres
+                    .FirstOrDefaultAsync(g => g.IdGenre == genreInput.Id || g.Name == genreInput.Name);
+
+                if (genre == null)
                 {
-                    genre = await _dbContext.Genres.FindAsync(genreInput.Id.Value);
-                    if (genre == null)
-                    {
-                        return BadRequest($"Genre ID: {genreInput.Id.Value} not found.");
-                    }
-                }
-                else
-                {
-                    genre = await _dbContext.Genres
-                        .FirstOrDefaultAsync(g => g.Name == genreInput.Name);
-                    if (genre == null)
-                    {
-                        genre = new Genre { Name = genreInput.Name };
-                        _dbContext.Genres.Add(genre);
-                        await _dbContext.SaveChangesAsync(); 
-                    }
+                    genre = new Genre { Name = genreInput.Name };
+                    _dbContext.Genres.Add(genre);
+                    await _dbContext.SaveChangesAsync();
                 }
                 genresList.Add(genre);
             }

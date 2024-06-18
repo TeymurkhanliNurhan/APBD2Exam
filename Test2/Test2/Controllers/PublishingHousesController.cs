@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Test2.Models;
 
 namespace Test2.Controllers
 {
@@ -17,12 +18,7 @@ namespace Test2.Controllers
         [HttpGet]
         public async Task<IActionResult> GetPublishingHousesAsync([FromQuery] string country, [FromQuery] string city)
         {
-            var query = _dbContext.PublishingHouses
-                .Include(ph => ph.Books)
-                .ThenInclude(b => b.Authors)
-                .Include(ph => ph.Books)
-                .ThenInclude(b => b.Genres)
-                .AsQueryable();
+            var query = _dbContext.PublishingHouses.AsQueryable();
 
             if (!string.IsNullOrEmpty(country))
             {
@@ -35,6 +31,10 @@ namespace Test2.Controllers
             }
 
             var result = await query
+                .Include(ph => ph.Books)
+                .ThenInclude(b => b.Authors)
+                .Include(ph => ph.Books)
+                .ThenInclude(b => b.Genres)
                 .OrderBy(ph => ph.Country)
                 .ThenBy(ph => ph.Name)
                 .ToListAsync();
