@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Test2.Models;
 using Test2.DTOs;
@@ -12,70 +13,70 @@ namespace Test2.Controllers
     [Route("api/[controller]")]
     public class BooksController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly AppDbContext _dbContext;
 
-        public BooksController(AppDbContext context)
+        public BooksController(AppDbContext dbContext)
         {
-            _context = context;
+            _dbContext = dbContext;
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddBook(AddBookRequest request)
+        public async Task<IActionResult> AddNewBookAsync(NewBookRequest request)
         {
-            var publishingHouse = await _context.PublishingHouses.FindAsync(request.PublishingHouseId);
-            if (publishingHouse == null)
+            var pubHouse = await _dbContext.PublishingHouses.FindAsync(request.PubHouseId);
+            if (pubHouse == null)
             {
-                return NotFound($"Publishing house with ID {request.PublishingHouseId} not found.");
+                return NotFound($"Publishing house ID: {request.PubHouseId} not found.");
             }
 
-            var authors = await _context.Authors
+            var authors = await _dbContext.Authors
                 .Where(a => request.AuthorIds.Contains(a.IdAuthor))
                 .ToListAsync();
 
             if (authors.Count != request.AuthorIds.Count)
             {
-                return BadRequest("One or more authors not found.");
+                return BadRequest("authors are not found.");
             }
 
-            var genres = new List<Genre>();
-            foreach (var genreDto in request.Genres)
+            var genresList = new List<Genre>();
+            foreach (var genreInput in request.Genres)
             {
                 Genre genre;
-                if (genreDto.Id.HasValue)
+                if (genreInput.Id.HasValue)
                 {
-                    genre = await _context.Genres.FindAsync(genreDto.Id.Value);
+                    genre = await _dbContext.Genres.FindAsync(genreInput.Id.Value);
                     if (genre == null)
                     {
-                        return BadRequest($"Genre with ID {genreDto.Id.Value} not found.");
+                        return BadRequest($"Genre ID: {genreInput.Id.Value} not found.");
                     }
                 }
                 else
                 {
-                    genre = await _context.Genres
-                        .FirstOrDefaultAsync(g => g.Name == genreDto.Name);
+                    genre = await _dbContext.Genres
+                        .FirstOrDefaultAsync(g => g.Name == genreInput.Name);
                     if (genre == null)
                     {
-                        genre = new Genre { Name = genreDto.Name };
-                        _context.Genres.Add(genre);
-                        await _context.SaveChangesAsync(); // Save new genre to get its ID
+                        genre = new Genre { Name = genreInput.Name };
+                        _dbContext.Genres.Add(genre);
+                        await _dbContext.SaveChangesAsync(); 
                     }
                 }
-                genres.Add(genre);
+                genresList.Add(genre);
             }
 
-            var book = new Book
+            var newBook = new Book
             {
-                Name = request.Name,
+                Name = request.Title,
                 ReleaseDate = request.ReleaseDate,
-                IdPublishingHouse = request.PublishingHouseId,
+                IdPublishingHouse = request.PubHouseId,
                 Authors = authors,
-                Genres = genres
+                Genres = genresList
             };
 
-            _context.Books.Add(book);
-            await _context.SaveChangesAsync();
+            _dbContext.Books.Add(newBook);
+            await _dbContext.SaveChangesAsync();
 
-            return Ok(book);
+            return Ok(newBook);
         }
     }
 }

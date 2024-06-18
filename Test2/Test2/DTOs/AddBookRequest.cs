@@ -2,16 +2,21 @@
 
 namespace Test2.DTOs
 {
-    public class AddBookRequest
+    public class NewBookRequest
     {
-        [Required] public string Name { get; set; }
+        [Required]
+        public string Title { get; set; }
 
-        [Required] public DateTime ReleaseDate { get; set; }
+        [Required]
+        public DateTime ReleaseDate { get; set; }
 
-        [Required] public int PublishingHouseId { get; set; }
+        [Required]
+        public int PubHouseId { get; set; }
 
-        [Required] public ICollection<int> AuthorIds { get; set; }
+        [Required]
+        public List<int> AuthorIds { get; set; }
 
-        [Required] public ICollection<GenreDto> Genres { get; set; }
+        [Required]
+        public List<GenreDto> Genres { get; set; }
     }
 }

@@ -7,17 +7,17 @@ namespace Test2.Controllers
     [Route("api/[controller]")]
     public class PublishingHousesController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly AppDbContext _dbContext;
 
-        public PublishingHousesController(AppDbContext context)
+        public PublishingHousesController(AppDbContext dbContext)
         {
-            _context = context;
+            _dbContext = dbContext;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetPublishingHouses([FromQuery] string country, [FromQuery] string city)
+        public async Task<IActionResult> GetPublishingHousesAsync([FromQuery] string country, [FromQuery] string city)
         {
-            var query = _context.PublishingHouses
+            var query = _dbContext.PublishingHouses
                 .Include(ph => ph.Books)
                 .ThenInclude(b => b.Authors)
                 .Include(ph => ph.Books)
